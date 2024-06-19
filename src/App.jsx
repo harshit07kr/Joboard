@@ -4,11 +4,17 @@ import Jobcards from "./componenets/Jobcards"
 import Navbar from "./componenets/Navbar"
 import Searchbar from "./componenets/Searchbar"
 import { collection, query, where, getDocs,orderBy } from "firebase/firestore"
-import { db } from "./firebase.config"
+import { db,auth } from "./firebase.config";
+import Signin from "./componenets/auth/Signin"
+import Signup from "./componenets/auth/Signup"
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { onAuthStateChanged } from "firebase/auth"
+
 function App(){
   const [jobs,setjobs] = useState([]);
   const [customsearch,setcustomsearch]= useState(false);
   const [searchbarKey, setSearchbarKey] = useState(Date.now());
+  const [user,setuser] = useState(null);
 
   const fetchjob= async() =>{
     setcustomsearch(false)
@@ -59,30 +65,56 @@ function App(){
 
   useEffect(()=>{//everytime page reloaded
     fetchjob()
+    onAuthStateChanged(auth,(user)=>{
+      if(user){
+        setuser(user); //you ar logged in
+      }else{
+        console.log("logged out");
+        setuser(null);
+      }
+    })
   },[])
+
 
   const resetFilters = () => {
     setSearchbarKey(Date.now());
     fetchjob();
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error logging out: ", error);
+    }
+  };
   
   return (
-      <div>
-        <Navbar />
-        <Headers />
-        <Searchbar key={searchbarKey} fetchjobcustom={fetchjobcustom} />
-        {customsearch &&
-        <div className="flex items-center justify-center pb-6">
-        <button onClick={resetFilters} className="flex mt-4">
-          <p className="bg-blue-500 px-10 py-2 rounded-md text-white">
-            Clear Filters
-          </p>
-          </button></div>}
-        {jobs.map((job) => (
-        <Jobcards key={job.id} {...job} />
-      ))}
-      </div>
+    
+    <Router>
+    <Routes>
+      <Route path="/signin" element={<Signin />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/" element={
+        <div>
+          <Navbar user={user} setUser={setuser} />
+          <Headers />
+          <Searchbar key={searchbarKey} fetchJobCustom={fetchjobcustom} />
+          {customsearch && (
+            <div className="flex items-center justify-center pb-6">
+              <button onClick={resetFilters} className="flex mt-4">
+                <p className="bg-blue-500 px-10 py-2 rounded-md text-white">Clear Filters</p>
+              </button>
+            </div>
+          )}
+          {jobs.map((job) => (
+            <Jobcards key={job.id} {...job} />
+          ))}
+        </div>
+      } />
+    </Routes>
+  </Router>
+      
   )
 }
 
