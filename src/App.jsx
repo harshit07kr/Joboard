@@ -99,7 +99,7 @@ function App(){
         <div>
           <Navbar user={user} setUser={setuser} />
           <Headers />
-          <Searchbar key={searchbarKey} fetchJobCustom={fetchjobcustom} />
+          <Searchbar key={searchbarKey} fetchjobcustom={fetchjobcustom} />
           {customsearch && (
             <div className="flex items-center justify-center pb-6">
               <button onClick={resetFilters} className="flex mt-4">
